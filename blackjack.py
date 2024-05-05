@@ -9,6 +9,7 @@ Python enviroment: Python 3.7.6 (default, Jan  8 2020, 20:23:39) [MSC v.1916 64 
 '''
 import random
 
+SHUFFLE_THRESHOLD = 52
 SUITS = ('Hearts', 'Diamonds', 'Spades', 'Clubs')
 RANKS = ('Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',   \
          'Ten', 'Jack', 'Queen', 'King', 'Ace')
@@ -107,6 +108,42 @@ class Chips:
 
 class NoFundsError(Exception):
     pass
+
+def player_wants_buyback(chips):
+    buyback_choice = input("You're out of chips! Buy back in? (Y/N):" )
+    if buyback_choice.upper() == 'Y':
+        chips.total = 100  # Reset the chip count to 100
+        print("Chips reset to: {}".format(chips.total))
+        return True
+    else:
+        return False
+
+def reset_game_state(deck, hand, dealer_hand, chips):
+    # Check for null pointers
+    if not all([deck, hand, dealer_hand, chips]):
+        raise ValueError("One or more of the game objects is null.")
+
+    chips.total = 100
+    print("Chips reset to: {}".format(chips.total))
+
+    # Clear all hands
+    clear_hands(hand, dealer_hand)
+
+    # Reshuffle deck
+    if len(deck) < SHUFFLE_THRESHOLD:
+        print("\n---------")
+        print("RESHUFFLING DECK")
+        print("---------\n")
+        deck = Deck(DECKS_IN_GAME)
+
+        # Check for unhandled exceptions
+        try:
+            deck.__init__()
+        except Exception as e:
+            print("Exception caught while reshuffling deck:", e)
+            raise
+
+    return deck  # return the updated deck
 
 def take_bet(chips):
     while True:
@@ -227,7 +264,10 @@ def game():
         if chips.total == 0:
             print('Sorry, but you have lost all your chips! Time to go home, pal!!!')
             print('Hope you enjoyed the game :)')
-            break
+            if not player_wants_buyback(chips):
+                break
+        else:
+            deck = reset_game_state(deck, hand, dealer_hand, chips)
 
         # Prompt the Player for their bet
         take_bet(chips)
