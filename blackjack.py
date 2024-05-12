@@ -64,6 +64,7 @@ class Hand:
         self.cards = []  # start with an empty list as we did in the Deck class
         self.value = 0   # start with zero value
         self.aces = 0    # add an attribute to keep track of aces
+        self.double_down = False
 
     def __str__(self):
         list_of_cards = []
@@ -73,15 +74,16 @@ class Hand:
         return str(list_of_cards)
 
     def add_card(self, card):
-        new_card = card
-        self.cards.append(new_card)
+        if not self.double_down or len(self.cards) == 2:
+            new_card = card
+            self.cards.append(new_card)
 
-        if new_card.rank == 'Ace':
-            self.aces += 1
+            if new_card.rank == 'Ace':
+                self.aces += 1
 
-        self.value += new_card.value
+            self.value += new_card.value
 
-        self.adjust_for_ace()
+            self.adjust_for_ace()
 
     def adjust_for_ace(self):
         while self.value > 21 and self.aces > 0:
@@ -92,6 +94,7 @@ class Hand:
         self.cards.clear()
         self.value = 0
         self.aces = 0
+        self.double_down = False
 
 
 class Chips:
@@ -123,8 +126,8 @@ def reset_game_state(deck, hand, dealer_hand, chips):
     if not all([deck, hand, dealer_hand, chips]):
         raise ValueError("One or more of the game objects is null.")
 
-    chips.total = 100
-    print("Chips reset to: {}".format(chips.total))
+    # chips.total = 100
+    # print("Chips reset to: {}".format(chips.total))
 
     # Clear all hands
     clear_hands(hand, dealer_hand)
@@ -170,17 +173,31 @@ def take_bet(chips):
 def hit(deck, hand):
     hand.add_card(deck.deal())
 
-def hit_or_stand(deck, hand):
-
+def hit_or_stand(deck, hand, chips):
     choise = ''
-    while choise not in ('H', 'S'):
-        choise = input('HIT or STAND? (H / S): ').upper()
-
+    while choise not in ('H', 'S', 'D'):
+        choise = input('HIT or STAND, or DOUBLE DOWN? (H / S / D): ').upper()
     if choise == 'H':
         hit(deck, hand)
         return True
+    elif choise == 'D':
+        double_down(deck, hand, chips)
+        if hand.double_down:
+            return False
+        else:
+            return True # Allow anouth choice if insufficient chips
     else:
         return False
+    
+def double_down(deck, hand, chips):
+    if chips.bet * 2 <= chips.total:
+        chips.bet *= 2
+        hand.double_down = True
+        hit(deck, hand)
+        print("Doubled down!")
+    else:
+        print("You don't have enough chips to double down.")
+
 
 def clear_hands(*args):
     for hand in args:
@@ -284,7 +301,7 @@ def game():
         while playing:  # recall this variable from our hit_or_stand function
 
             # Prompt for Player to Hit or Stand
-            playing = hit_or_stand(deck, hand)
+            playing = hit_or_stand(deck, hand, chips)
 
             # Show cards (but keep one dealer card hidden)
             show_some(hand, dealer_hand)

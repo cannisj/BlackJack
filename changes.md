@@ -16,3 +16,11 @@
 * **Implement a variable buy-in amount, allowing the player more choice.**
 * **Add minimum and maximum betting limits to the game.**
 * **Add chip tracker to maintain chip count after each hand.**
+
+**Changes** (5/11/2024)
+* **Double-Downs Feature**
+ *   Implemented double_down function to allow players to double their bet and receive one more card if they meet the requirements.
+ *   Added doubled_down attribute to the Hand class to track whether a hand is doubled down.
+ *   Modified add_card in the Hand class to restrict to one additional card if the hand is doubled down.
+ *   Modified hit_or_stand to offer the double down option ('D') and handle its logic.
+ *   Updated the main game loop to integrate the double down functionality.
